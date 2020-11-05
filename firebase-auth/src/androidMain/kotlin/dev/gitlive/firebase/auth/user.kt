@@ -48,7 +48,7 @@ actual class FirebaseUser internal constructor(val android: com.google.firebase.
     actual suspend fun updateProfile(displayName: String?, photoUrl: String?) {
         val request = UserProfileChangeRequest.Builder()
             .setDisplayName(displayName)
-            .setPhotoUri(photoURL?.let { Uri.parse(it) })
+            .setPhotoUri(photoUrl?.let { Uri.parse(it) })
             .build()
         android.updateProfile(request).await()
     }

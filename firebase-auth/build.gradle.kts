@@ -1,3 +1,6 @@
+/*
+ * Copyright (c) 2020 GitLive Ltd.  Use of this source code is governed by the Apache 2.0 license.
+ */
 version = project.property("firebase-auth.version") as String
 
 plugins {
@@ -37,7 +40,7 @@ android {
         }
     }
     packagingOptions {
-        pickFirst("META-INF/kotlinx-serialization-runtime.kotlin_module")
+        pickFirst("META-INF/kotlinx-serialization-core.kotlin_module")
         pickFirst("META-INF/AL2.0")
         pickFirst("META-INF/LGPL2.1")
     }
@@ -61,11 +64,7 @@ android {
 
 kotlin {
     js {
-        val main by compilations.getting {
-            kotlinOptions {
-                moduleKind = "commonjs"
-            }
-        }
+        useCommonJs()
         nodejs()
         browser()
     }
@@ -93,8 +92,7 @@ kotlin {
     tasks.withType<org.jetbrains.kotlin.gradle.dsl.KotlinCompile<*>> {
         kotlinOptions.freeCompilerArgs += listOf(
             "-Xuse-experimental=kotlin.Experimental",
-            "-Xuse-experimental=kotlinx.coroutines.ExperimentalCoroutinesApi",
-            "-Xuse-experimental=kotlinx.serialization.ImplicitReflectionSerializer"
+            "-Xuse-experimental=kotlinx.coroutines.ExperimentalCoroutinesApi"
         )
     }
 
@@ -127,12 +125,6 @@ kotlin {
                 }
             }
         }
-
-        cocoapods {
-            summary = ""
-            homepage = ""
-        }
-
     }
 }
 

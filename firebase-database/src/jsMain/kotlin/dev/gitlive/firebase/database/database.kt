@@ -97,7 +97,7 @@ actual class DatabaseReference internal constructor(override val js: firebase.da
 
     actual suspend fun removeValue() = rethrow { js.remove().await() }
 
-    actual suspend fun setValue(value: Any?, encodeDefaults: Boolean) = rethrow {
+    actual suspend inline fun <reified T> setValue(value: T?, encodeDefaults: Boolean) = rethrow {
         js.set(encode(value, encodeDefaults)).await()
     }
 
@@ -133,7 +133,7 @@ actual class OnDisconnect internal constructor(val js: firebase.database.OnDisco
     actual suspend fun updateChildren(update: Map<String, Any?>, encodeDefaults: Boolean) =
         rethrow { js.update(encode(update, encodeDefaults)).await() }
 
-    actual suspend fun setValue(value: Any, encodeDefaults: Boolean) =
+    actual suspend inline fun <reified T> setValue(value: T, encodeDefaults: Boolean) =
         rethrow { js.set(encode(value, encodeDefaults)).await() }
 
     actual suspend fun <T> setValue(strategy: SerializationStrategy<T>, value: T, encodeDefaults: Boolean) =

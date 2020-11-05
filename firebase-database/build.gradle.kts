@@ -3,7 +3,6 @@ version = project.property("firebase-database.version") as String
 plugins {
     id("com.android.library")
     kotlin("multiplatform")
-    kotlin("native.cocoapods")
 }
 
 repositories {
@@ -29,7 +28,7 @@ android {
         }
     }
     packagingOptions {
-        pickFirst("META-INF/kotlinx-serialization-runtime.kotlin_module")
+        pickFirst("META-INF/kotlinx-serialization-core.kotlin_module")
         pickFirst("META-INF/AL2.0")
         pickFirst("META-INF/LGPL2.1")
     }
@@ -40,11 +39,7 @@ android {
 
 kotlin {
     js {
-        val main by compilations.getting {
-            kotlinOptions {
-                moduleKind = "commonjs"
-            }
-        }
+        useCommonJs()
         nodejs()
         browser()
     }
@@ -75,7 +70,7 @@ kotlin {
         kotlinOptions.freeCompilerArgs += listOf(
             "-Xuse-experimental=kotlin.Experimental",
             "-Xuse-experimental=kotlinx.coroutines.ExperimentalCoroutinesApi",
-            "-Xuse-experimental=kotlinx.serialization.ImplicitReflectionSerializer"
+            "-Xuse-experimental=kotlinx.serialization.InternalSerializationApi"
         )
     }
 
@@ -106,11 +101,6 @@ kotlin {
                     compilerOpts("-F$projectDir/src/iosMain/c_interop/Carthage/Build/iOS/")
                 }
             }
-        }
-
-        cocoapods {
-            summary = ""
-            homepage = ""
         }
     }
 }

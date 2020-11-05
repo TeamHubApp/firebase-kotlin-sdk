@@ -47,16 +47,16 @@ actual class FirebaseFirestore(val android: com.google.firebase.firestore.Fireba
 
 actual class WriteBatch(val android: com.google.firebase.firestore.WriteBatch) {
 
-    actual fun set(documentRef: DocumentReference, data: Any, encodeDefaults: Boolean, merge: Boolean) = when(merge) {
+    actual inline fun <reified T> set(documentRef: DocumentReference, data: T, encodeDefaults: Boolean, merge: Boolean) = when(merge) {
         true -> android.set(documentRef.android, encode(data, encodeDefaults)!!, SetOptions.merge())
         false -> android.set(documentRef.android, encode(data, encodeDefaults)!!)
     }.let { this }
 
-    actual fun set(documentRef: DocumentReference, data: Any, encodeDefaults: Boolean, vararg mergeFields: String) =
+    actual inline fun <reified T> set(documentRef: DocumentReference, data: T, encodeDefaults: Boolean, vararg mergeFields: String) =
         android.set(documentRef.android, encode(data, encodeDefaults)!!, SetOptions.mergeFields(*mergeFields))
             .let { this }
 
-    actual fun set(documentRef: DocumentReference, data: Any, encodeDefaults: Boolean, vararg mergeFieldPaths: FieldPath) =
+    actual inline fun <reified T> set(documentRef: DocumentReference, data: T, encodeDefaults: Boolean, vararg mergeFieldPaths: FieldPath) =
         android.set(documentRef.android, encode(data, encodeDefaults)!!, SetOptions.mergeFieldPaths(mergeFieldPaths.toList()))
             .let { this }
 
@@ -74,7 +74,7 @@ actual class WriteBatch(val android: com.google.firebase.firestore.WriteBatch) {
             .let { this }
 
     @Suppress("UNCHECKED_CAST")
-    actual fun update(documentRef: DocumentReference, data: Any, encodeDefaults: Boolean) =
+    actual inline fun <reified T> update(documentRef: DocumentReference, data: T, encodeDefaults: Boolean) =
         android.update(documentRef.android, encode(data, encodeDefaults) as Map<String, Any>).let { this }
 
     @Suppress("UNCHECKED_CAST")
@@ -193,16 +193,16 @@ actual class DocumentReference(val android: com.google.firebase.firestore.Docume
     actual val path: String
         get() = android.path
 
-    actual suspend fun set(data: Any, encodeDefaults: Boolean, merge: Boolean) = when(merge) {
+    actual suspend inline fun <reified T> set(data: T, encodeDefaults: Boolean, merge: Boolean) = when(merge) {
         true -> android.set(encode(data, encodeDefaults)!!, SetOptions.merge())
         false -> android.set(encode(data, encodeDefaults)!!)
     }.await().run { Unit }
 
-    actual suspend fun set(data: Any, encodeDefaults: Boolean, vararg mergeFields: String) =
+    actual suspend inline fun <reified T> set(data: T, encodeDefaults: Boolean, vararg mergeFields: String) =
         android.set(encode(data, encodeDefaults)!!, SetOptions.mergeFields(*mergeFields))
             .await().run { Unit }
 
-    actual suspend fun set(data: Any, encodeDefaults: Boolean, vararg mergeFieldPaths: FieldPath) =
+    actual suspend inline fun <reified T> set(data: T, encodeDefaults: Boolean, vararg mergeFieldPaths: FieldPath) =
         android.set(encode(data, encodeDefaults)!!, SetOptions.mergeFieldPaths(mergeFieldPaths.toList()))
             .await().run { Unit }
 
@@ -220,7 +220,7 @@ actual class DocumentReference(val android: com.google.firebase.firestore.Docume
             .await().run { Unit }
 
     @Suppress("UNCHECKED_CAST")
-    actual suspend fun update(data: Any, encodeDefaults: Boolean) =
+    actual suspend inline fun <reified T> update(data: T, encodeDefaults: Boolean) =
         android.update(encode(data, encodeDefaults) as Map<String, Any>).await().run { Unit }
 
     @Suppress("UNCHECKED_CAST")
@@ -319,7 +319,7 @@ actual class CollectionReference(override val android: com.google.firebase.fires
     actual val path: String
         get() = android.path
 
-    actual suspend fun add(data: Any, encodeDefaults: Boolean) =
+    actual suspend inline fun <reified T> add(data: T, encodeDefaults: Boolean) =
         DocumentReference(android.add(encode(data, encodeDefaults)!!).await())
 
     actual suspend fun <T> add(data: T, strategy: SerializationStrategy<T>, encodeDefaults: Boolean) =

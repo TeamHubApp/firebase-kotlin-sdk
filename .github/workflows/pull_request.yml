@@ -21,7 +21,7 @@ jobs:
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
     - name: Install Carthage
-      run: brew install carthage
+      run: brew list carthage || brew install carthage
     - name: Assemble
       run: ./gradlew assemble
     - name: Run JS Tests

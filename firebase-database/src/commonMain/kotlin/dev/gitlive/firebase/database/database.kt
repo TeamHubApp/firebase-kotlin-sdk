@@ -9,7 +9,6 @@ import dev.gitlive.firebase.FirebaseApp
 import dev.gitlive.firebase.database.ChildEvent.Type.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.DeserializationStrategy
-import kotlinx.serialization.ImplicitReflectionSerializer
 import kotlinx.serialization.SerializationStrategy
 
 /** Returns the [FirebaseDatabase] instance of the default [FirebaseApp]. */
@@ -58,10 +57,8 @@ expect class DatabaseReference : Query {
     fun push(): DatabaseReference
     fun child(path: String): DatabaseReference
     fun onDisconnect(): OnDisconnect
-    @ImplicitReflectionSerializer
-    suspend fun setValue(value: Any?, encodeDefaults: Boolean = true)
+    suspend inline fun <reified T> setValue(value: T?, encodeDefaults: Boolean = true)
     suspend fun <T> setValue(strategy: SerializationStrategy<T>, value: T, encodeDefaults: Boolean = true)
-    @ImplicitReflectionSerializer
     suspend fun updateChildren(update: Map<String, Any?>, encodeDefaults: Boolean = true)
     suspend fun removeValue()
 }
@@ -69,7 +66,6 @@ expect class DatabaseReference : Query {
 expect class DataSnapshot {
     val exists: Boolean
     val key: String?
-    @ImplicitReflectionSerializer
     inline fun <reified T> value(): T
     fun <T> value(strategy: DeserializationStrategy<T>): T
     fun child(path: String): DataSnapshot
@@ -85,10 +81,8 @@ expect class DatabaseException : RuntimeException
 expect class OnDisconnect {
     suspend fun removeValue()
     suspend fun cancel()
-    @ImplicitReflectionSerializer
-    suspend fun setValue(value: Any, encodeDefaults: Boolean = true)
+    suspend inline fun <reified T> setValue(value: T, encodeDefaults: Boolean = true)
     suspend fun <T> setValue(strategy: SerializationStrategy<T>, value: T, encodeDefaults: Boolean = true)
-    @ImplicitReflectionSerializer
     suspend fun updateChildren(update: Map<String, Any?>, encodeDefaults: Boolean = true)
 }
 

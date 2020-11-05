@@ -27,7 +27,7 @@ import kotlinx.coroutines.tasks.await
 import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.SerializationStrategy
 
-fun encode(value: Any?, shouldEncodeElementDefault: Boolean) =
+inline fun <reified T> encode(value: T, shouldEncodeElementDefault: Boolean) =
     dev.gitlive.firebase.encode(value, shouldEncodeElementDefault, ServerValue.TIMESTAMP)
 
 fun <T> encode(strategy: SerializationStrategy<T> , value: T, shouldEncodeElementDefault: Boolean): Any? =
@@ -149,7 +149,7 @@ actual class DatabaseReference internal constructor(
     actual fun push() = DatabaseReference(android.push(), persistenceEnabled)
     actual fun onDisconnect() = OnDisconnect(android.onDisconnect(), persistenceEnabled)
 
-    actual suspend fun setValue(value: Any?, encodeDefaults: Boolean) = android.setValue(encode(value, encodeDefaults))
+    actual suspend inline fun <reified T> setValue(value: T?, encodeDefaults: Boolean) = android.setValue(encode(value, encodeDefaults))
         .run { if(persistenceEnabled) await() else awaitWhileOnline() }
         .run { Unit }
 
@@ -199,7 +199,7 @@ actual class OnDisconnect internal constructor(
         .run { if(persistenceEnabled) await() else awaitWhileOnline() }
         .run { Unit }
 
-    actual suspend fun setValue(value: Any, encodeDefaults: Boolean) =
+    actual suspend inline fun <reified T> setValue(value: T, encodeDefaults: Boolean) =
         android.setValue(encode(value, encodeDefaults))
             .run { if(persistenceEnabled) await() else awaitWhileOnline() }
             .run { Unit }

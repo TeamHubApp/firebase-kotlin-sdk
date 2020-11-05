@@ -13,6 +13,7 @@ import dev.gitlive.firebase.database.ChildEvent.Type.*
 import dev.gitlive.firebase.decode
 import dev.gitlive.firebase.safeOffer
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.channels.ClosedSendChannelException
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.coroutineScope
@@ -116,7 +117,7 @@ actual class DatabaseReference internal constructor(
     actual fun push() = DatabaseReference(ios.childByAutoId(), persistenceEnabled)
     actual fun onDisconnect() = OnDisconnect(ios, persistenceEnabled)
 
-    actual suspend fun setValue(value: Any?, encodeDefaults: Boolean) {
+    actual suspend inline fun <reified T> setValue(value: T?, encodeDefaults: Boolean) {
         ios.await(persistenceEnabled) { setValue(encode(value, encodeDefaults), it) }
     }
 
@@ -163,7 +164,7 @@ actual class OnDisconnect internal constructor(
         ios.await(persistenceEnabled) { cancelDisconnectOperationsWithCompletionBlock(it) }
     }
 
-    actual suspend fun setValue(value: Any, encodeDefaults: Boolean) {
+    actual suspend inline fun <reified T> setValue(value: T, encodeDefaults: Boolean) {
         ios.await(persistenceEnabled) { onDisconnectSetValue(encode(value, encodeDefaults), it) }
     }
 
@@ -171,6 +172,7 @@ actual class OnDisconnect internal constructor(
         ios.await(persistenceEnabled) { onDisconnectSetValue(encode(strategy, value, encodeDefaults), it) }
     }
 
+    @Suppress("UNCHECKED_CAST")
     actual suspend fun updateChildren(update: Map<String, Any?>, encodeDefaults: Boolean) {
         ios.await(persistenceEnabled) { onDisconnectUpdateChildValues(update.mapValues { (_, it) -> encode(it, encodeDefaults) } as Map<Any?, *>, it) }
     }
@@ -190,7 +192,7 @@ private suspend inline fun <T, reified R> T.awaitResult(whileOnline: Boolean, fu
     return job.run { if(whileOnline) awaitWhileOnline() else await() } as R
 }
 
-private suspend inline fun <T> T.await(whileOnline: Boolean, function: T.(callback: (NSError?, FIRDatabaseReference?) -> Unit) -> Unit) {
+suspend inline fun <T> T.await(whileOnline: Boolean, function: T.(callback: (NSError?, FIRDatabaseReference?) -> Unit) -> Unit) {
     val job = CompletableDeferred<Unit>()
     function { error, _ ->
         if(error == null) {
@@ -202,7 +204,8 @@ private suspend inline fun <T> T.await(whileOnline: Boolean, function: T.(callba
     job.run { if(whileOnline) awaitWhileOnline() else await() }
 }
 
-private suspend fun <T> CompletableDeferred<T>.awaitWhileOnline(): T = coroutineScope {
+@FlowPreview
+suspend fun <T> CompletableDeferred<T>.awaitWhileOnline(): T = coroutineScope {
 
     val notConnected = Firebase.database
         .reference(".info/connected")

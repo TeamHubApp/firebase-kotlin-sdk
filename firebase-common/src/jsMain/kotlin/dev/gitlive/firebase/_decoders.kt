@@ -4,14 +4,14 @@
 
 package dev.gitlive.firebase
 
-import kotlinx.serialization.CompositeDecoder
+import kotlinx.serialization.encoding.CompositeDecoder
 import kotlinx.serialization.KSerializer
-import kotlinx.serialization.SerialDescriptor
-import kotlinx.serialization.StructureKind
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.descriptors.StructureKind
 import kotlin.js.Json
 
 @Suppress("UNCHECKED_CAST_TO_EXTERNAL_INTERFACE")
-actual fun FirebaseDecoder.structureDecoder(descriptor: SerialDescriptor, vararg typeParams: KSerializer<*>): CompositeDecoder = when(descriptor.kind as StructureKind) {
+actual fun FirebaseDecoder.structureDecoder(descriptor: SerialDescriptor): CompositeDecoder = when(descriptor.kind as StructureKind) {
     StructureKind.CLASS, StructureKind.OBJECT -> (value as Json).let { json ->
         FirebaseClassDecoder(js("Object").keys(value).length as Int, { json[it] != undefined }) {
                 desc, index -> json[desc.getElementName(index)]

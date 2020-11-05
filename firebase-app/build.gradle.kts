@@ -3,11 +3,9 @@
  */
 version = project.property("firebase-app.version") as String
 
-
 plugins {
     id("com.android.library")
     kotlin("multiplatform")
-    kotlin("native.cocoapods")
 }
 
 repositories {
@@ -33,7 +31,7 @@ android {
         }
     }
     packagingOptions {
-        pickFirst("META-INF/kotlinx-serialization-runtime.kotlin_module")
+        pickFirst("META-INF/kotlinx-serialization-core.kotlin_module")
         pickFirst("META-INF/AL2.0")
         pickFirst("META-INF/LGPL2.1")
     }
@@ -44,21 +42,10 @@ android {
 
 kotlin {
     js {
-        val main by compilations.getting {
-            kotlinOptions {
-                moduleKind = "commonjs"
-            }
-        }
+        useCommonJs()
         nodejs()
         browser()
     }
-//    js("reactnative") {
-//        val main by compilations.getting {
-//            kotlinOptions {
-//                moduleKind = "commonjs"
-//            }
-//        }
-//    }
     android {
         publishLibraryVariants("release", "debug")
     }
@@ -86,12 +73,6 @@ kotlin {
                 implementation(project(":firebase-common"))
             }
         }
-        val commonTest by getting {
-            dependencies {
-                implementation(kotlin("test-common"))
-                implementation(kotlin("test-annotations-common"))
-            }
-        }
         val androidMain by getting {
             dependencies {
                 api("com.google.firebase:firebase-common:19.3.1")
@@ -110,12 +91,6 @@ kotlin {
                     compilerOpts("-F$projectDir/src/iosMain/c_interop/Carthage/Build/iOS/")
                 }
             }
-        }
-
-        cocoapods {
-            summary = ""
-            homepage = ""
-            //pod("FirebaseCore", "~> 6.3.1")
         }
     }
 }

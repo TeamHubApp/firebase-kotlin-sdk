@@ -4,7 +4,7 @@ import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 
 plugins {
-    kotlin("multiplatform") version "1.3.72" apply false
+    kotlin("multiplatform") version "1.4.10" apply false
     id("de.undercouch.download").version("3.4.3")
     id("base")
 }
@@ -46,7 +46,7 @@ subprojects {
     group = "dev.gitlive"
 
     apply(plugin="com.adarshr.test-logger")
-
+    
     repositories {
         mavenLocal()
         mavenCentral()
@@ -181,14 +181,6 @@ subprojects {
         }
     }
 
-//    tasks.withType<KotlinCompile<*>> {
-//        kotlinOptions.freeCompilerArgs += listOf(
-//            "-Xuse-experimental=kotlin.Experimental",
-//            "-Xuse-experimental=kotlinx.coroutines.ExperimentalCoroutinesApi",
-//            "-Xuse-experimental=kotlinx.serialization.ImplicitReflectionSerializer"
-//        )
-//    }
-
     afterEvaluate  {
         // create the projects node_modules if they don't exist
         if(!File("$buildDir/node_module").exists()) {
@@ -201,28 +193,22 @@ subprojects {
 
         dependencies {
             "jvmMainImplementation"(kotlin("stdlib-jdk8"))
-            "jvmMainImplementation"("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.7")
-            "jvmMainApi"("dev.gitlive:firebase-java-sdk:0.5.1")
-            "jvmMainApi"("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.3.7") {
+            "jvmMainApi"("dev.gitlive:firebase-java-sdk:1.0.0")
+            "jvmMainApi"("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.3.9") {
                 exclude("com.google.android.gms")
             }
             "commonMainImplementation"(kotlin("stdlib-common"))
-            "commonMainImplementation"("org.jetbrains.kotlinx:kotlinx-coroutines-core-common:1.3.7")
+            "commonMainImplementation"("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.9")
             "jsMainImplementation"(kotlin("stdlib-js"))
-            "jsMainImplementation"("org.jetbrains.kotlinx:kotlinx-coroutines-core-js:1.3.7")
-            "androidMainImplementation"("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.3.7")
-            "androidMainImplementation"("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.3.7")
-            "iosMainImplementation"("org.jetbrains.kotlinx:kotlinx-coroutines-core-common:1.3.7")
-            "iosMainImplementation"("org.jetbrains.kotlinx:kotlinx-coroutines-core-native:1.3.7")
+            "androidMainImplementation"("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.3.9")
             "commonTestImplementation"(kotlin("test-common"))
             "commonTestImplementation"(kotlin("test-annotations-common"))
-            "commonTestImplementation"("org.jetbrains.kotlinx:kotlinx-coroutines-core-common:1.3.7")
-            "commonTestImplementation"("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.3.7")
+            "commonTestImplementation"("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.9")
+            "commonTestImplementation"("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.3.9")
             "jsTestImplementation"(kotlin("test-js"))
             "androidAndroidTestImplementation"(kotlin("test-junit"))
             "androidAndroidTestImplementation"("junit:junit:4.13")
             "androidAndroidTestImplementation"("androidx.test:core:1.2.0")
-            "androidAndroidTestImplementation"("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.3.7")
             "androidAndroidTestImplementation"("androidx.test.ext:junit:1.1.1")
             "androidAndroidTestImplementation"("androidx.test:runner:1.2.0")
         }

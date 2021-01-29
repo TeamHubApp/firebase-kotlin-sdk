@@ -339,17 +339,12 @@ external object firebase {
             fun <T> runTransaction(func: (transaction: Transaction) -> Promise<T>): Promise<T>
             fun batch(): WriteBatch
             fun collection(collectionPath: String): CollectionReference
+            fun collectionGroup(collectionId: String): Query
             fun doc(documentPath: String): DocumentReference
             fun settings(settings: Json)
             fun enablePersistence(): Promise<Unit>
             fun clearPersistence(): Promise<Unit>
             fun useEmulator(host: String, port: Int)
-        }
-
-        open class Timestamp {
-            val seconds: Double
-            val nanoseconds: Double
-            fun toMillis(): Double
         }
 
         open class Query {
@@ -429,6 +424,14 @@ external object firebase {
             fun delete(documentReference: DocumentReference): Transaction
         }
 
+        open class Timestamp(seconds: Long, nanoseconds: Int) {
+            companion object {
+                fun now(): Timestamp
+            }
+
+            val seconds: Long
+            val nanoseconds: Int
+        }
         open class FieldPath(vararg fieldNames: String) {
             companion object {
                 val documentId: FieldPath
@@ -437,10 +440,10 @@ external object firebase {
 
         abstract class FieldValue {
             companion object {
-                fun serverTimestamp(): FieldValue
                 fun delete(): FieldValue
                 fun arrayRemove(vararg elements: Any): FieldValue
                 fun arrayUnion(vararg elements: Any): FieldValue
+                fun serverTimestamp(): FieldValue
             }
         }
     }

@@ -16,20 +16,6 @@ import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.SerializationStrategy
 import platform.Foundation.NSError
 
-@PublishedApi
-internal inline fun <reified T> decode(value: Any?): T =
-    decode(value) { (it as? FIRTimestamp)?.run { seconds * 1000 + (nanoseconds / 1000000.0) } }
-
-internal fun <T> decode(strategy: DeserializationStrategy<T>, value: Any?): T =
-    decode(strategy, value) { (it as? FIRTimestamp)?.run { seconds * 1000 + (nanoseconds / 1000000.0) } }
-
-@PublishedApi
-internal inline fun <reified T> encode(value: T, shouldEncodeElementDefault: Boolean) =
-    encode(value, shouldEncodeElementDefault, FIRFieldValue.fieldValueForServerTimestamp())
-
-private fun <T> encode(strategy: SerializationStrategy<T> , value: T, shouldEncodeElementDefault: Boolean): Any? =
-    encode(strategy, value, shouldEncodeElementDefault, FIRFieldValue.fieldValueForServerTimestamp())
-
 actual val Firebase.firestore get() =
     FirebaseFirestore(FIRFirestore.firestore())
 
@@ -43,6 +29,8 @@ actual class FirebaseFirestore(val ios: FIRFirestore) {
     actual fun collection(collectionPath: String) = CollectionReference(ios.collectionWithPath(collectionPath))
 
     actual fun document(documentPath: String) = DocumentReference(ios.documentWithPath(documentPath))
+
+    actual fun collectionGroup(collectionId: String) = Query(ios.collectionGroupWithID(collectionId))
 
     actual fun batch() = WriteBatch(ios.batch())
 
@@ -247,10 +235,9 @@ actual open class Query(open val ios: FIRQuery) {
     )
 
     internal actual fun _orderBy(field: String, direction: Direction) = Query(ios.queryOrderedByField(field, direction == Direction.DESCENDING))
-
     internal actual fun _orderBy(field: FieldPath, direction: Direction) = Query(ios.queryOrderedByFieldPath(field.ios, direction == Direction.DESCENDING))
-
 }
+
 @Suppress("UNCHECKED_CAST")
 actual class CollectionReference(override val ios: FIRCollectionReference) : Query(ios) {
 
@@ -328,8 +315,6 @@ fun NSError.toException() = when(domain) {
 }.let { FirebaseFirestoreException(description!!, it) }
 
 actual class QuerySnapshot(val ios: FIRQuerySnapshot) {
-    actual val documents
-        get() = ios.documents.map { DocumentSnapshot(it as FIRDocumentSnapshot) }
     actual val documentChanges
         get() = ios.documentChanges.map { DocumentChange(it as FIRDocumentChange) }
     actual val metadata: SnapshotMetadata get() = SnapshotMetadata(ios.metadata)
@@ -380,10 +365,10 @@ actual class FieldPath private constructor(val ios: FIRFieldPath) {
 }
 
 actual object FieldValue {
-    actual val serverTimestamp = Double.POSITIVE_INFINITY
     actual val delete: Any get() = FIRFieldValue.fieldValueForDelete()
     actual fun arrayUnion(vararg elements: Any): Any = FIRFieldValue.fieldValueForArrayUnion(elements.asList())
     actual fun arrayRemove(vararg elements: Any): Any = FIRFieldValue.fieldValueForArrayUnion(elements.asList())
+    actual fun serverTimestamp(): Any = FIRFieldValue.fieldValueForServerTimestamp()
     actual fun delete(): Any = delete
 }
 

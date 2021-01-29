@@ -106,6 +106,8 @@ open class FirebaseCompositeEncoder constructor(
     override fun <T> encodeSerializableElement(descriptor: SerialDescriptor, index: Int, serializer: SerializationStrategy<T>, value: T)  =
         set(descriptor, index, FirebaseEncoder(shouldEncodeElementDefault, positiveInfinity).apply { encodeSerializableValue(serializer, value) }.value)
 
+    fun <T> encodeObject(descriptor: SerialDescriptor, index: Int, value: T) = set(descriptor, index, value)
+
     override fun encodeBooleanElement(descriptor: SerialDescriptor, index: Int, value: Boolean) = set(descriptor, index, value)
 
     override fun encodeByteElement(descriptor: SerialDescriptor, index: Int, value: Byte) = set(descriptor, index, value)

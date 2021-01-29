@@ -13,20 +13,6 @@ import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.SerializationStrategy
 import kotlin.js.json
 
-@PublishedApi
-internal inline fun <reified T> decode(value: Any?): T =
-    decode(value) { it.takeIf { it.asDynamic().toMillis != undefined }?.asDynamic().toMillis() as? Double }
-
-internal fun <T> decode(strategy: DeserializationStrategy<T>, value: Any?): T =
-    decode(strategy, value) { it.takeIf { it.asDynamic().toMillis != undefined }?.asDynamic().toMillis() as? Double }
-
-@PublishedApi
-internal inline fun <reified T> encode(value: T, shouldEncodeElementDefault: Boolean) =
-    encode(value, shouldEncodeElementDefault, firebase.firestore.FieldValue.serverTimestamp())
-
-private fun <T> encode(strategy: SerializationStrategy<T> , value: T, shouldEncodeElementDefault: Boolean): Any? =
-    encode(strategy, value, shouldEncodeElementDefault, firebase.firestore.FieldValue.serverTimestamp())
-
 actual val Firebase.firestore get() =
     rethrow { dev.gitlive.firebase.firestore; FirebaseFirestore(firebase.firestore()) }
 
@@ -44,6 +30,8 @@ actual class FirebaseFirestore(val js: firebase.firestore.Firestore) {
     actual fun collection(collectionPath: String) = rethrow { CollectionReference(js.collection(collectionPath)) }
 
     actual fun document(documentPath: String) = rethrow { DocumentReference(js.doc(documentPath)) }
+
+    actual fun collectionGroup(collectionId: String) = rethrow { Query(js.collectionGroup(collectionId)) }
 
     actual fun batch() = rethrow { WriteBatch(js.batch()) }
 
@@ -344,8 +332,6 @@ actual class FirebaseFirestoreException(cause: Throwable, val code: FirestoreExc
 actual val FirebaseFirestoreException.code: FirestoreExceptionCode get() = code
 
 actual class QuerySnapshot(val js: firebase.firestore.QuerySnapshot) {
-    actual val documents
-        get() = js.docs.map { DocumentSnapshot(it) }
     actual val documentChanges
         get() = js.docChanges().map { DocumentChange(it) }
     actual val metadata: SnapshotMetadata get() = SnapshotMetadata(js.metadata)
@@ -397,10 +383,11 @@ actual class FieldPath private constructor(val js: firebase.firestore.FieldPath)
 }
 
 actual object FieldValue {
-    actual val serverTimestamp = Double.POSITIVE_INFINITY
+    @JsName("_serverTimestamp")
     actual val delete: Any get() = rethrow { firebase.firestore.FieldValue.delete() }
     actual fun arrayUnion(vararg elements: Any): Any = rethrow { firebase.firestore.FieldValue.arrayUnion(*elements) }
     actual fun arrayRemove(vararg elements: Any): Any = rethrow { firebase.firestore.FieldValue.arrayRemove(*elements) }
+    actual fun serverTimestamp(): Any = rethrow { firebase.firestore.FieldValue.serverTimestamp() }
     @JsName("deprecatedDelete")
     actual fun delete(): Any = delete
 }

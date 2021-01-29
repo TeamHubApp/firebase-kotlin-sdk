@@ -32,6 +32,20 @@ actual class FirebaseApp internal constructor(val js: firebase.App) {
 
 actual fun Firebase.apps(context: Any?) = firebase.apps.map { FirebaseApp(it) }
 
+actual class FirebaseOptions actual constructor(
+    actual val applicationId: String,
+    actual val apiKey: String,
+    actual val databaseUrl: String?,
+    actual val gaTrackingId: String?,
+    actual val storageBucket: String?,
+    actual val projectId: String?,
+    actual val gcmSenderId: String?
+) {
+    actual companion object {
+        actual fun withContext(context: Any): FirebaseOptions? = null
+    }
+}
+
 private fun FirebaseOptions.toJson() = json(
     "apiKey" to apiKey,
     "applicationId" to applicationId,

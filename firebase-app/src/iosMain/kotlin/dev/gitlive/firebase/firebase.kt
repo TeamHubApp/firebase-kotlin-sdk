@@ -30,13 +30,34 @@ actual class FirebaseApp internal constructor(val ios: FIRApp) {
     actual val name: String
         get() = ios.name
     actual val options: FirebaseOptions
-        get() = ios.options.run { FirebaseOptions(bundleID, APIKey!!, databaseURL!!, trackingID, storageBucket, projectID) }
+        get() = ios.options.run { FirebaseOptions(bundleID, APIKey!!, databaseURL!!, trackingID, storageBucket, projectID, GCMSenderID) }
 }
 
 actual fun Firebase.apps(context: Any?) = FIRApp.allApps()
     .orEmpty()
     .values
     .map { FirebaseApp(it as FIRApp) }
+
+actual class FirebaseOptions actual constructor(
+    actual val applicationId: String,
+    actual val apiKey: String,
+    actual val databaseUrl: String?,
+    actual val gaTrackingId: String?,
+    actual val storageBucket: String?,
+    actual val projectId: String?,
+    actual val gcmSenderId: String?
+) {
+    actual companion object {
+        actual fun withContext(context: Any): FirebaseOptions? {
+            return when (context) {
+                is String -> FIROptions(contentsOfFile = context)
+                else -> FIROptions.defaultOptions()
+            }?.run {
+                FirebaseOptions(googleAppID!!, APIKey!!, databaseURL, trackingID, storageBucket, projectID, GCMSenderID)
+            }
+        }
+    }
+}
 
 private fun FirebaseOptions.toIos() = FIROptions(this@toIos.applicationId, this@toIos.gcmSenderId ?: "").apply {
         APIKey = this@toIos.apiKey

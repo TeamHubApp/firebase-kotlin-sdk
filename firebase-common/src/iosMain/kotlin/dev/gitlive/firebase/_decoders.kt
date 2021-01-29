@@ -4,20 +4,37 @@
 
 package dev.gitlive.firebase
 
+import kotlinx.serialization.descriptors.PolymorphicKind
 import kotlinx.serialization.encoding.CompositeDecoder
-import kotlinx.serialization.KSerializer
-import kotlinx.serialization.SerializationException
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.StructureKind
+import platform.Foundation.*
+import platform.darwin.NSObject
 
-actual fun FirebaseDecoder.structureDecoder(descriptor: SerialDescriptor, decodeDouble: (value: Any?) -> Double?): CompositeDecoder = when(descriptor.kind as StructureKind) {
-    StructureKind.CLASS, StructureKind.OBJECT -> (value as Map<*, *>).let { map ->
-        FirebaseClassDecoder(decodeDouble, map.size, { map.containsKey(it) }) { desc, index -> map[desc.getElementName(index)] }
+actual fun FirebaseDecoder.structureDecoder(descriptor: SerialDescriptor): CompositeDecoder = when(descriptor.kind) {
+    StructureKind.CLASS, StructureKind.OBJECT -> when {
+        value is Map<*, *> ->
+            FirebaseClassDecoder(value.size, { value.containsKey(it) }) { desc, index ->
+                value[desc.getElementName(index)]
+            }
+        value is NSObject && NSClassFromString("FIRTimestamp") == value.`class`() -> {
+            makeFIRTimestampDecoder(value)
+        }
+        else -> FirebaseEmptyCompositeDecoder()
     }
-    StructureKind.LIST -> (value as List<*>).let {
-        FirebaseCompositeDecoder(decodeDouble, it.size) { _, index -> it[index] }
+    StructureKind.LIST, is PolymorphicKind -> (value as List<*>).let {
+        FirebaseCompositeDecoder(it.size) { _, index -> it[index] }
     }
     StructureKind.MAP -> (value as Map<*, *>).entries.toList().let {
-        FirebaseCompositeDecoder(decodeDouble, it.size) { _, index -> it[index/2].run { if(index % 2 == 0) key else value }  }
+        FirebaseCompositeDecoder(it.size) { _, index -> it[index/2].run { if(index % 2 == 0) key else value }  }
     }
+    else -> TODO("Not implemented ${descriptor.kind}")
+}
+
+private val timestampKeys = setOf("seconds", "nanoseconds")
+private fun makeFIRTimestampDecoder(objcObj: NSObject) = FirebaseClassDecoder(
+    size = 2,
+    containsKey = { timestampKeys.contains(it) }
+) { descriptor, index ->
+    objcObj.valueForKeyPath(descriptor.getElementName(index))
 }

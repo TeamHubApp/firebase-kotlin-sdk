@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinAndroidTarget
+
 version = project.property("firebase-functions.version") as String
 
 plugins {
@@ -61,6 +63,14 @@ kotlin {
         )
     }
 
+    if (findProperty("firebase-kotlin-sdk.functions.useIR")?.toString()?.equals("true", ignoreCase = true) == true) {
+        logger.info("Using IR compilation for firebase-functions module")
+        targets.getByName<KotlinAndroidTarget>("android").compilations.all {
+            kotlinOptions {
+                useIR = true
+            }
+        }
+    }
     sourceSets {
         val commonMain by getting {
             dependencies {

@@ -5,33 +5,16 @@
 @file:JvmName("android")
 package dev.gitlive.firebase.firestore
 
-import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestoreSettings
 import com.google.firebase.firestore.SetOptions
 import dev.gitlive.firebase.*
-import dev.gitlive.firebase.firestore.encode
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.tasks.await
 import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.SerializationStrategy
-import kotlinx.serialization.serializer
-
-@PublishedApi
-internal inline fun <reified T> decode(value: Any?): T =
-    decode(value) { (it as? Timestamp)?.run { seconds * 1000 + (nanoseconds / 1000000.0) } }
-
-internal fun <T> decode(strategy: DeserializationStrategy<T>, value: Any?): T =
-    decode(strategy, value) { (it as? Timestamp)?.run { seconds * 1000 + (nanoseconds / 1000000.0) } }
-
-@PublishedApi
-internal inline fun <reified T> encode(value: T, shouldEncodeElementDefault: Boolean) =
-    encode(value, shouldEncodeElementDefault, FieldValue.serverTimestamp())
-
-private fun <T> encode(strategy: SerializationStrategy<T> , value: T, shouldEncodeElementDefault: Boolean): Any? =
-    encode(strategy, value, shouldEncodeElementDefault, FieldValue.serverTimestamp())
 
 actual val Firebase.firestore get() =
     FirebaseFirestore(com.google.firebase.firestore.FirebaseFirestore.getInstance())
@@ -50,6 +33,8 @@ actual class FirebaseFirestore(val android: com.google.firebase.firestore.Fireba
     actual fun collection(collectionPath: String) = CollectionReference(android.collection(collectionPath))
 
     actual fun document(documentPath: String) = DocumentReference(android.document(documentPath))
+
+    actual fun collectionGroup(collectionId: String) = Query(android.collectionGroup(collectionId))
 
     actual fun batch() = WriteBatch(android.batch())
 
@@ -371,8 +356,6 @@ actual val FirebaseFirestoreException.code: FirestoreExceptionCode get() = code
 actual typealias FirestoreExceptionCode = com.google.firebase.firestore.FirebaseFirestoreException.Code
 
 actual class QuerySnapshot(val android: com.google.firebase.firestore.QuerySnapshot) {
-    actual val documents
-        get() = android.documents.map { DocumentSnapshot(it) }
     actual val documentChanges
         get() = android.documentChanges.map { DocumentChange(it) }
     actual val metadata: SnapshotMetadata get() = SnapshotMetadata(android.metadata)
@@ -422,7 +405,7 @@ actual class FieldPath private constructor(val android: com.google.firebase.fire
 }
 
 actual object FieldValue {
-    actual val serverTimestamp = Double.POSITIVE_INFINITY
+    actual fun serverTimestamp(): Any = com.google.firebase.firestore.FieldValue.serverTimestamp()
     actual val delete: Any get() = FieldValue.delete()
     actual fun arrayUnion(vararg elements: Any): Any = FieldValue.arrayUnion(*elements)
     actual fun arrayRemove(vararg elements: Any): Any = FieldValue.arrayRemove(*elements)

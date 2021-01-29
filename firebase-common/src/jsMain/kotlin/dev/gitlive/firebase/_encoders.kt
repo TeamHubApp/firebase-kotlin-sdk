@@ -4,13 +4,14 @@
 
 package dev.gitlive.firebase
 
+import kotlinx.serialization.descriptors.PolymorphicKind
 import kotlinx.serialization.encoding.CompositeEncoder
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.StructureKind
 import kotlin.js.json
 
-actual fun FirebaseEncoder.structureEncoder(descriptor: SerialDescriptor): CompositeEncoder = when(descriptor.kind as StructureKind) {
-    StructureKind.LIST -> Array<Any?>(descriptor.elementsCount) { null }
+actual fun FirebaseEncoder.structureEncoder(descriptor: SerialDescriptor): CompositeEncoder = when(descriptor.kind) {
+    StructureKind.LIST, is PolymorphicKind -> Array<Any?>(descriptor.elementsCount) { null }
         .also { value = it }
         .let { FirebaseCompositeEncoder(shouldEncodeElementDefault, positiveInfinity) { _, index, value -> it[index] = value } }
     StructureKind.MAP -> {
@@ -22,5 +23,5 @@ actual fun FirebaseEncoder.structureEncoder(descriptor: SerialDescriptor): Compo
     StructureKind.CLASS,  StructureKind.OBJECT -> json()
         .also { value = it }
         .let { FirebaseCompositeEncoder(shouldEncodeElementDefault, positiveInfinity) { _, index, value -> it[descriptor.getElementName(index)] = value } }
+    else -> TODO("Not implemented ${descriptor.kind}")
 }
-

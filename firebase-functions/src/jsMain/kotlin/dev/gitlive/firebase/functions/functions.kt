@@ -27,6 +27,8 @@ actual class FirebaseFunctions internal constructor(val js: firebase.functions.F
         rethrow { HttpsCallableReference(js.httpsCallable(name, timeout?.let { json("timeout" to timeout.toDouble()) })) }
 
     actual fun useFunctionsEmulator(origin: String) = js.useFunctionsEmulator(origin)
+
+    actual fun useEmulator(host: String, port: Int) = js.useEmulator(host, port)
 }
 
 @Suppress("UNCHECKED_CAST")
@@ -35,7 +37,7 @@ actual class HttpsCallableReference internal constructor(val js: firebase.functi
     actual suspend operator fun invoke() =
         rethrow { HttpsCallableResult(js().await()) }
 
-    actual suspend operator fun invoke(data: Any, encodeDefaults: Boolean) =
+    actual suspend inline operator fun <reified T> invoke(data: T, encodeDefaults: Boolean) =
         rethrow { HttpsCallableResult(js(encode(data, encodeDefaults)).await()) }
 
     actual suspend operator fun <T> invoke(strategy: SerializationStrategy<T>, data: T, encodeDefaults: Boolean) =

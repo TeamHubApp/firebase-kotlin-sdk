@@ -30,6 +30,7 @@ actual class FirebaseUser internal constructor(val js: firebase.user.User) {
     actual suspend fun delete() = rethrow { js.delete().await() }
     actual suspend fun reload() = rethrow { js.reload().await() }
     actual suspend fun getIdToken(forceRefresh: Boolean): String? = rethrow { js.getIdToken(forceRefresh).await() }
+    actual suspend fun getIdTokenResult(forceRefresh: Boolean): AuthTokenResult = rethrow { AuthTokenResult(js.getIdTokenResult(forceRefresh).await()) }
     actual suspend fun linkWithCredential(credential: AuthCredential): AuthResult = rethrow { AuthResult(js.linkWithCredential(credential.js).await()) }
     actual suspend fun reauthenticate(credential: AuthCredential) = rethrow {
         js.reauthenticateWithCredential(credential.js).await()

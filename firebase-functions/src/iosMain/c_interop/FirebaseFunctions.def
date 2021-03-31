@@ -1,4 +1,0 @@
-language = Objective-C
-modules = FirebaseFunctions
-compilerOpts = -framework FirebaseFunctions
-linkerOpts = -framework FirebaseFunctions -framework GTMSessionFetcher

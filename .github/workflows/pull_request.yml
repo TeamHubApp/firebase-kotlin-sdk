@@ -21,7 +21,11 @@ jobs:
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
     - name: Install Carthage
-      run: brew install carthage
+      run: brew list carthage || brew install carthage
+    - name: Install Firebase tools
+      run: npm install -g firebase-tools
+    - name: Start Firebase emulator
+      run: "firebase emulators:start --config=./test/firebase.json &"
     - name: Assemble
       run: ./gradlew assemble
     - name: Run JS Tests

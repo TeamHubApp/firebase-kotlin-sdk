@@ -1,0 +1,5 @@
+language = Objective-C
+package = cocoapods.FirebaseDatabase
+modules = FirebaseDatabase
+compilerOpts = -framework FirebaseDatabase
+linkerOpts = -framework FirebaseDatabase -framework leveldb-library

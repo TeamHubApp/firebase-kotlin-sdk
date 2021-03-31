@@ -1,13 +1,14 @@
 /*
  * Copyright (c) 2020 GitLive Ltd.  Use of this source code is governed by the Apache 2.0 license.
  */
-version = project.property("firebase-app.version") as String
 
+import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
+
+version = project.property("firebase-app.version") as String
 
 plugins {
     id("com.android.library")
     kotlin("multiplatform")
-    kotlin("native.cocoapods")
 }
 
 repositories {
@@ -33,7 +34,7 @@ android {
         }
     }
     packagingOptions {
-        pickFirst("META-INF/kotlinx-serialization-runtime.kotlin_module")
+        pickFirst("META-INF/kotlinx-serialization-core.kotlin_module")
         pickFirst("META-INF/AL2.0")
         pickFirst("META-INF/LGPL2.1")
     }
@@ -43,15 +44,16 @@ android {
 }
 
 kotlin {
-    js {
-        val main by compilations.getting {
-            kotlinOptions {
-                moduleKind = "umd"
-            }
-        }
-        nodejs()
+    js("browser", IR) {
+        useCommonJs()
         browser()
     }
+    js("node", LEGACY) {
+        useCommonJs()
+        nodejs()
+        binaries.executable()
+    }
+
 //    js("reactnative") {
 //        val main by compilations.getting {
 //            kotlinOptions {
@@ -60,7 +62,7 @@ kotlin {
 //        }
 //    }
     android {
-        publishLibraryVariants("release", "debug")
+        publishAllLibraryVariants()
     }
     jvm {
         val main by compilations.getting {
@@ -70,52 +72,71 @@ kotlin {
         }
     }
 
-    val iosArm64 = iosArm64()
-    val iosX64 = iosX64("ios") {
+    fun nativeTargetConfig(): KotlinNativeTarget.() -> Unit = {
+        val nativeFrameworkPaths = listOf(
+            projectDir.resolve("src/nativeInterop/cinterop/Carthage/Build/iOS")
+        )
+
         binaries {
             getTest("DEBUG").apply {
-                linkerOpts("-F$projectDir/src/iosMain/c_interop/Carthage/Build/iOS/")
+                linkerOpts(nativeFrameworkPaths.map { "-F$it" })
                 linkerOpts("-ObjC")
+            }
+        }
+
+        compilations.getByName("main") {
+            cinterops.create("FirebaseCore") {
+                compilerOpts(nativeFrameworkPaths.map { "-F$it" })
+                extraOpts("-verbose")
             }
         }
     }
 
+    if (project.extra["ideaActive"] as Boolean) {
+        iosX64("ios", nativeTargetConfig())
+    } else {
+        ios(configure = nativeTargetConfig())
+    }
+
     sourceSets {
+        all {
+            languageSettings.apply {
+                apiVersion = "1.4"
+                languageVersion = "1.4"
+                progressiveMode = true
+            }
+        }
+
         val commonMain by getting {
             dependencies {
                 implementation(project(":firebase-common"))
             }
         }
-        val commonTest by getting {
-            dependencies {
-                implementation(kotlin("test-common"))
-                implementation(kotlin("test-annotations-common"))
-            }
-        }
+
         val androidMain by getting {
             dependencies {
-                api("com.google.firebase:firebase-common:19.3.1")
+                api("com.google.firebase:firebase-common:19.5.0")
             }
         }
         val jvmMain by getting {
             kotlin.srcDir("src/androidMain/kotlin")
         }
 
-        configure(listOf(iosArm64, iosX64)) {
-            compilations.getByName("main") {
-                source(sourceSets.get("iosMain"))
-                val firebasecore by cinterops.creating {
-                    packageName("cocoapods.FirebaseCore")
-                    defFile(file("$projectDir/src/iosMain/c_interop/FirebaseCore.def"))
-                    compilerOpts("-F$projectDir/src/iosMain/c_interop/Carthage/Build/iOS/")
-                }
+        val jvmTest by getting {
+            dependencies {
+                implementation(kotlin("test-junit"))
             }
         }
 
-        cocoapods {
-            summary = ""
-            homepage = ""
-            //pod("FirebaseCore", "~> 6.3.1")
+        val iosMain by getting
+
+        val jsMain by creating
+
+        val browserMain by getting {
+            dependsOn(jsMain)
+        }
+        val nodeMain by getting {
+            dependsOn(jsMain)
         }
     }
 }

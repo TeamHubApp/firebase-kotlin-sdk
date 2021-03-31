@@ -1,9 +1,14 @@
+/*
+ * Copyright (c) 2020 GitLive Ltd.  Use of this source code is governed by the Apache 2.0 license.
+ */
+
+import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
+
 version = project.property("firebase-auth.version") as String
 
 plugins {
     id("com.android.library")
     kotlin("multiplatform")
-    kotlin("native.cocoapods")
     //id("com.quittle.android-emulator") version "0.2.0"
 }
 
@@ -29,7 +34,10 @@ android {
         getByName("main") {
             manifest.srcFile("src/androidMain/AndroidManifest.xml")
         }
-        getByName("androidTest").java.srcDir(file("src/androidAndroidTest/kotlin"))
+        getByName("androidTest"){
+            java.srcDir(file("src/androidAndroidTest/kotlin"))
+            manifest.srcFile("src/androidAndroidTest/AndroidManifest.xml")
+        }
     }
     testOptions {
         unitTests.apply {
@@ -37,7 +45,7 @@ android {
         }
     }
     packagingOptions {
-        pickFirst("META-INF/kotlinx-serialization-runtime.kotlin_module")
+        pickFirst("META-INF/kotlinx-serialization-core.kotlin_module")
         pickFirst("META-INF/AL2.0")
         pickFirst("META-INF/LGPL2.1")
     }
@@ -60,29 +68,41 @@ android {
 //}
 
 kotlin {
-    js {
-        val main by compilations.getting {
-            kotlinOptions {
-                moduleKind = "umd"
-            }
-        }
-        nodejs()
+    js("browser", IR) {
+        useCommonJs()
         browser()
     }
-    android {
-        publishLibraryVariants("release", "debug")
+    js("node", LEGACY) {
+        useCommonJs()
+        nodejs()
+        binaries.executable()
     }
-    val iosArm64 = iosArm64()
-    val iosX64 = iosX64("ios") {
+
+    android {
+        publishAllLibraryVariants()
+    }
+
+    fun nativeTargetConfig(): KotlinNativeTarget.() -> Unit = {
+        val nativeFrameworkPaths = listOf(
+            rootProject.project("firebase-app").projectDir.resolve("src/nativeInterop/cinterop/Carthage/Build/iOS"),
+            projectDir.resolve("src/nativeInterop/cinterop/Carthage/Build/iOS")
+        )
+
         binaries {
             getTest("DEBUG").apply {
-                linkerOpts(
-                    "-F${rootProject.projectDir}/firebase-app/src/iosMain/c_interop/Carthage/Build/iOS/",
-                    "-F$projectDir/src/iosMain/c_interop/Carthage/Build/iOS/")
+                linkerOpts(nativeFrameworkPaths.map { "-F$it" })
                 linkerOpts("-ObjC")
             }
         }
+
+        compilations.getByName("main") {
+            cinterops.create("FirebaseAuth") {
+                compilerOpts(nativeFrameworkPaths.map { "-F$it" })
+                extraOpts("-verbose")
+            }
+        }
     }
+
     jvm {
         val main by compilations.getting {
             kotlinOptions {
@@ -90,15 +110,23 @@ kotlin {
             }
         }
     }
-    tasks.withType<org.jetbrains.kotlin.gradle.dsl.KotlinCompile<*>> {
-        kotlinOptions.freeCompilerArgs += listOf(
-            "-Xuse-experimental=kotlin.Experimental",
-            "-Xuse-experimental=kotlinx.coroutines.ExperimentalCoroutinesApi",
-            "-Xuse-experimental=kotlinx.serialization.ImplicitReflectionSerializer"
-        )
+
+    if (project.extra["ideaActive"] as Boolean) {
+        iosX64("ios", nativeTargetConfig())
+    } else {
+        ios(configure = nativeTargetConfig())
     }
 
     sourceSets {
+        all {
+            languageSettings.apply {
+                apiVersion = "1.4"
+                languageVersion = "1.4"
+                progressiveMode = true
+                useExperimentalAnnotation("kotlinx.coroutines.ExperimentalCoroutinesApi")
+            }
+        }
+
         val commonMain by getting {
             dependencies {
                 api(project(":firebase-app"))
@@ -108,31 +136,23 @@ kotlin {
 
         val androidMain by getting {
             dependencies {
-                api("com.google.firebase:firebase-auth:19.3.2")
+                api("com.google.firebase:firebase-auth:20.0.3")
             }
         }
         val jvmMain by getting {
             kotlin.srcDir("src/androidMain/kotlin")
         }
 
-        configure(listOf(iosArm64, iosX64)) {
-            compilations.getByName("main") {
-                source(sourceSets.get("iosMain"))
-                val firebaseAuth by cinterops.creating {
-                    packageName("cocoapods.FirebaseAuth")
-                    defFile(file("$projectDir/src/iosMain/c_interop/FirebaseAuth.def"))
-                    compilerOpts(
-                        "-F$projectDir/src/iosMain/c_interop/Carthage/Build/iOS/"
-                    )
-                }
-            }
-        }
+        val iosMain by getting
 
-        cocoapods {
-            summary = ""
-            homepage = ""
-        }
+        val jsMain by creating
 
+        val browserMain by getting {
+            dependsOn(jsMain)
+        }
+        val nodeMain by getting {
+            dependsOn(jsMain)
+        }
     }
 }
 

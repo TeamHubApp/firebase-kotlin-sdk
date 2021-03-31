@@ -30,12 +30,15 @@ actual class FirebaseFunctions internal constructor(val android: com.google.fire
         HttpsCallableReference(android.getHttpsCallable(name).apply { timeout?.let { setTimeout(it, TimeUnit.MILLISECONDS) } })
 
     actual fun useFunctionsEmulator(origin: String) = android.useFunctionsEmulator(origin)
+
+    //actual fun useEmulator(host: String, port: Int) = android.useEmulator(host, port)
+    actual fun useEmulator(host: String, port: Int) = Unit
 }
 
 actual class HttpsCallableReference internal constructor(val android: com.google.firebase.functions.HttpsCallableReference) {
     actual suspend operator fun invoke() = HttpsCallableResult(android.call().await())
 
-    actual suspend operator fun invoke(data: Any, encodeDefaults: Boolean) =
+    actual suspend operator inline fun <reified T> invoke(data: T, encodeDefaults: Boolean) =
         HttpsCallableResult(android.call(encode(data, encodeDefaults)).await())
 
     actual suspend operator fun <T> invoke(strategy: SerializationStrategy<T>, data: T, encodeDefaults: Boolean) =

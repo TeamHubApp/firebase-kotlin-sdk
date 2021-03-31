@@ -11,9 +11,11 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.SerializationStrategy
 
-fun encode(value: Any?, shouldEncodeElementDefault: Boolean) =
+@PublishedApi
+internal inline fun <reified T> encode(value: T, shouldEncodeElementDefault: Boolean) =
     encode(value, shouldEncodeElementDefault, firebase.database.ServerValue.TIMESTAMP)
-fun <T> encode(strategy: SerializationStrategy<T>, value: T, shouldEncodeElementDefault: Boolean): Any? =
+
+internal fun <T> encode(strategy: SerializationStrategy<T>, value: T, shouldEncodeElementDefault: Boolean): Any? =
     encode(strategy, value, shouldEncodeElementDefault, firebase.database.ServerValue.TIMESTAMP)
 
 
@@ -33,6 +35,7 @@ actual class FirebaseDatabase internal constructor(val js: firebase.database.Dat
     actual fun reference(path: String) = rethrow { DatabaseReference(js.ref(path)) }
     actual fun setPersistenceEnabled(enabled: Boolean) {}
     actual fun setLoggingEnabled(enabled: Boolean) = rethrow { firebase.database.enableLogging(enabled) }
+    actual fun useEmulator(host: String, port: Int) = rethrow { js.useEmulator(host, port) }
 }
 
 actual open class Query internal constructor(open val js: firebase.database.Query) {
@@ -114,7 +117,7 @@ actual class DatabaseReference internal constructor(override val js: firebase.da
 
     actual suspend fun removeValue() = rethrow { js.remove().await() }
 
-    actual suspend fun setValue(value: Any?, encodeDefaults: Boolean) = rethrow {
+    actual suspend inline fun <reified T> setValue(value: T?, encodeDefaults: Boolean) = rethrow {
         js.set(encode(value, encodeDefaults)).await()
     }
 
@@ -152,7 +155,7 @@ actual class OnDisconnect internal constructor(val js: firebase.database.OnDisco
     actual suspend fun updateChildren(update: Map<String, Any?>, encodeDefaults: Boolean) =
         rethrow { js.update(encode(update, encodeDefaults)).await() }
 
-    actual suspend fun setValue(value: Any, encodeDefaults: Boolean) =
+    actual suspend inline fun <reified T> setValue(value: T, encodeDefaults: Boolean) =
         rethrow { js.set(encode(value, encodeDefaults)).await() }
 
     actual suspend fun <T> setValue(strategy: SerializationStrategy<T>, value: T, encodeDefaults: Boolean) =

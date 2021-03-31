@@ -19,6 +19,7 @@ expect class FirebaseUser {
     suspend fun delete()
     suspend fun reload()
     suspend fun getIdToken(forceRefresh: Boolean): String?
+    suspend fun getIdTokenResult(forceRefresh: Boolean): AuthTokenResult
     suspend fun linkWithCredential(credential: AuthCredential): AuthResult
     suspend fun reauthenticate(credential: AuthCredential)
     suspend fun reauthenticateAndRetrieveData(credential: AuthCredential): AuthResult
@@ -27,7 +28,7 @@ expect class FirebaseUser {
     suspend fun updateEmail(email: String)
     suspend fun updatePassword(password: String)
     suspend fun updatePhoneNumber(credential: PhoneAuthCredential)
-    suspend fun updateProfile(displayName: String? = null, photoUrl: String? = null)
+    suspend fun updateProfile(displayName: String? = this.displayName, photoUrl: String? = this.photoURL)
     suspend fun verifyBeforeUpdateEmail(newEmail: String, actionCodeSettings: ActionCodeSettings? = null)
 }
 

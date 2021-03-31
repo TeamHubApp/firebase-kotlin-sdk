@@ -1,9 +1,14 @@
+/*
+ * Copyright (c) 2020 GitLive Ltd.  Use of this source code is governed by the Apache 2.0 license.
+ */
+
+import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
+
 version = project.property("firebase-database.version") as String
 
 plugins {
     id("com.android.library")
     kotlin("multiplatform")
-    kotlin("native.cocoapods")
 }
 
 repositories {
@@ -29,7 +34,7 @@ android {
         }
     }
     packagingOptions {
-        pickFirst("META-INF/kotlinx-serialization-runtime.kotlin_module")
+        pickFirst("META-INF/kotlinx-serialization-core.kotlin_module")
         pickFirst("META-INF/AL2.0")
         pickFirst("META-INF/LGPL2.1")
     }
@@ -39,17 +44,17 @@ android {
 }
 
 kotlin {
-    js {
-        val main by compilations.getting {
-            kotlinOptions {
-                moduleKind = "umd"
-            }
-        }
-        nodejs()
+    js("browser", IR) {
+        useCommonJs()
         browser()
     }
+    js("node", LEGACY) {
+        useCommonJs()
+        nodejs()
+        binaries.executable()
+    }
     android {
-        publishLibraryVariants("release", "debug")
+        publishAllLibraryVariants()
     }
     jvm {
         val main by compilations.getting {
@@ -58,59 +63,71 @@ kotlin {
             }
         }
     }
-    val iosArm64 = iosArm64()
-    val iosX64 = iosX64("ios") {
+
+    fun nativeTargetConfig(): KotlinNativeTarget.() -> Unit = {
+        val nativeFrameworkPaths = listOf(
+            rootProject.project("firebase-app").projectDir.resolve("src/nativeInterop/cinterop/Carthage/Build/iOS"),
+            projectDir.resolve("src/nativeInterop/cinterop/Carthage/Build/iOS")
+        )
+
         binaries {
             getTest("DEBUG").apply {
-                linkerOpts(
-                    "-F${rootProject.projectDir}/firebase-app/src/iosMain/c_interop/Carthage/Build/iOS/",
-                    "-F$projectDir/src/iosMain/c_interop/Carthage/Build/iOS/"
-                )
+                linkerOpts(nativeFrameworkPaths.map { "-F$it" })
                 linkerOpts("-ObjC")
+            }
+        }
+
+        compilations.getByName("main") {
+            cinterops.create("FirebaseDatabase") {
+                compilerOpts(nativeFrameworkPaths.map { "-F$it" })
+                extraOpts("-verbose")
             }
         }
     }
 
-    tasks.withType<org.jetbrains.kotlin.gradle.dsl.KotlinCompile<*>> {
-        kotlinOptions.freeCompilerArgs += listOf(
-            "-Xuse-experimental=kotlin.Experimental",
-            "-Xuse-experimental=kotlinx.coroutines.ExperimentalCoroutinesApi",
-            "-Xuse-experimental=kotlinx.serialization.ImplicitReflectionSerializer"
-        )
+    if (project.extra["ideaActive"] as Boolean) {
+        iosX64("ios", nativeTargetConfig())
+    } else {
+        ios(configure = nativeTargetConfig())
     }
 
     sourceSets {
+        all {
+            languageSettings.apply {
+                apiVersion = "1.4"
+                languageVersion = "1.4"
+                progressiveMode = true
+                useExperimentalAnnotation("kotlinx.coroutines.ExperimentalCoroutinesApi")
+                useExperimentalAnnotation("kotlinx.coroutines.FlowPreview")
+                useExperimentalAnnotation("kotlinx.serialization.InternalSerializationApi")
+            }
+        }
+
         val commonMain by getting {
             dependencies {
                 api(project(":firebase-app"))
                 implementation(project(":firebase-common"))
             }
         }
+
         val androidMain by getting {
             dependencies {
-                api("com.google.firebase:firebase-database:19.3.1")
+                api("com.google.firebase:firebase-database:19.6.0")
             }
         }
         val jvmMain by getting {
             kotlin.srcDir("src/androidMain/kotlin")
         }
-        val jsMain by getting {}
-        val iosMain by getting {}
 
-        configure(listOf(iosArm64, iosX64)) {
-            compilations.getByName("main") {
-                source(sourceSets.get("iosMain"))
-                val firebaseDatabase by cinterops.creating {
-                    packageName("cocoapods.FirebaseDatabase")
-                    defFile(file("$projectDir/src/iosMain/c_interop/FirebaseDatabase.def"))
-                    compilerOpts("-F$projectDir/src/iosMain/c_interop/Carthage/Build/iOS/")
-                }
-            }
+        val iosMain by getting
+
+        val jsMain by creating
+
+        val browserMain by getting {
+            dependsOn(jsMain)
         }
-
-        cocoapods {
-            summary = ""
-            homepage = ""
+        val nodeMain by getting {
+            dependsOn(jsMain)
         }
     }
 }

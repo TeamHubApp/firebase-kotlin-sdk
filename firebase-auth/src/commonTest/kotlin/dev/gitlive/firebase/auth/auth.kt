@@ -8,6 +8,7 @@ import dev.gitlive.firebase.*
 import kotlin.random.Random
 import kotlin.test.*
 
+expect val emulatorHost: String
 expect val context: Any
 expect fun runTest(test: suspend () -> Unit)
 
@@ -17,22 +18,26 @@ class FirebaseAuthTest {
     fun initializeFirebase() {
         Firebase
             .takeIf { Firebase.apps(context).isEmpty() }
-            ?.initialize(
-                context,
-                FirebaseOptions(
-                    applicationId = "1:846484016111:ios:dd1f6688bad7af768c841a",
-                    apiKey = "AIzaSyCK87dcMFhzCz_kJVs2cT2AVlqOTLuyWV0",
-                    databaseUrl = "https://fir-kotlin-sdk.firebaseio.com",
-                    storageBucket = "fir-kotlin-sdk.appspot.com",
-                    projectId = "fir-kotlin-sdk"
+            ?.apply {
+                initialize(
+                    context,
+                    FirebaseOptions(
+                        applicationId = "1:846484016111:ios:dd1f6688bad7af768c841a",
+                        apiKey = "AIzaSyCK87dcMFhzCz_kJVs2cT2AVlqOTLuyWV0",
+                        databaseUrl = "https://fir-kotlin-sdk.firebaseio.com",
+                        storageBucket = "fir-kotlin-sdk.appspot.com",
+                        projectId = "fir-kotlin-sdk"
+                    )
                 )
-            )
+                Firebase.auth.useEmulator(emulatorHost, 9099)
+            }
     }
 
     @Test
     fun testSignInWithUsernameAndPassword() = runTest {
+        val uid = getTestUid("test@test.com", "test123")
         val result = Firebase.auth.signInWithEmailAndPassword("test@test.com", "test123")
-        assertEquals("mn8kgIFnxLO7il8GpTa5g0ObP6I2", result.user!!.uid)
+        assertEquals(uid, result.user!!.uid)
     }
 
     @Test
@@ -85,9 +90,27 @@ class FirebaseAuthTest {
 
     @Test
     fun testSignInWithCredential() = runTest {
+        val uid = getTestUid("test@test.com", "test123")
         val credential = EmailAuthProvider.credential("test@test.com", "test123")
         val result = Firebase.auth.signInWithCredential(credential)
-        assertEquals("mn8kgIFnxLO7il8GpTa5g0ObP6I2", result.user!!.uid)
+        assertEquals(uid, result.user!!.uid)
+    }
 
+    private suspend fun getTestUid(email: String, password: String): String {
+        val uid = Firebase.auth.let {
+            val user = try {
+                it.createUserWithEmailAndPassword(email, password).user
+            } catch (e: FirebaseAuthUserCollisionException) {
+                // the user already exists, just sign in for getting user's ID
+                it.signInWithEmailAndPassword(email, password).user
+            }
+            user!!.uid
+        }
+
+        check(Firebase.auth.currentUser != null)
+        Firebase.auth.signOut()
+        check(Firebase.auth.currentUser == null)
+
+        return uid
     }
 }

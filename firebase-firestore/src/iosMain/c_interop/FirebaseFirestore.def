@@ -1,4 +1,0 @@
-language = Objective-C
-modules = FirebaseFirestore
-compilerOpts = -framework FirebaseFirestore
-linkerOpts = -framework FirebaseFirestore -framework abseil -framework gRPC-Core -framework gRPC-C++ -framework BoringSSL-GRPC -framework leveldb-library -framework SystemConfiguration -framework MobileCoreServices

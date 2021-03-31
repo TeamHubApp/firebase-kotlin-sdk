@@ -5,15 +5,28 @@
 local.properties
 /**/*.iml
 *.iml
-firebase-app/src/iosMain/c_interop/modules/
-firebase-functions/src/iosMain/c_interop/modules/
-firebase-auth/src/iosMain/c_interop/modules/
-firebase-firestore/src/iosMain/c_interop/modules/
-firebase-database/src/iosMain/c_interop/modules/
+firebase-app/src/nativeInterop/cinterop/modules/
+firebase-functions/src/nativeInterop/cinterop/modules/
+firebase-auth/src/nativeInterop/cinterop/modules/
+firebase-firestore/src/nativeInterop/cinterop/modules/
+firebase-database/src/nativeInterop/cinterop/modules/
+/firebase-app/src/iosMain/c_interop/modules/
+/firebase-functions/src/iosMain/c_interop/modules/
+/firebase-auth/src/iosMain/c_interop/modules/
+/firebase-firestore/src/iosMain/c_interop/modules/
+/firebase-database/src/iosMain/c_interop/modules/
+
 Firebase*.zip
 /Firebase
 /.DS_Store
+*.log
 
 
-/**/Cartfile.resolved
-/**/c_interop/Carthage/
+
+/**/nativeInterop/cinterop/Cartfile.resolved
+/**/nativeInterop/cinterop/Carthage/
+/firebase-app/src/iosMain/c_interop/Cartfile.resolved
+/firebase-auth/src/iosMain/c_interop/Cartfile.resolved
+/firebase-database/src/iosMain/c_interop/Cartfile.resolved
+/firebase-firestore/src/iosMain/c_interop/Cartfile.resolved
+/firebase-functions/src/iosMain/c_interop/Cartfile.resolved

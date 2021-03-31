@@ -1,10 +1,14 @@
 {
     "name": "Firebase Kotlin SDK (unofficial)",
     "platforms": [
-        "Android"
+        "Android",
+        "iOS",
+        "Web"
     ],
     "content": "README.md",
     "related": [
-      "firebase/firebase-android-sdk"
+      "firebase/firebase-android-sdk",
+      "firebase/firebase-ios-sdk",
+      "firebase/firebase-js-sdk"  
     ]
 }

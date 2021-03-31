@@ -8,23 +8,23 @@ import dev.gitlive.firebase.Firebase
 import dev.gitlive.firebase.FirebaseApp
 import dev.gitlive.firebase.FirebaseException
 import kotlinx.serialization.DeserializationStrategy
-import kotlinx.serialization.ImplicitReflectionSerializer
 import kotlinx.serialization.SerializationStrategy
 
 expect class FirebaseFunctions {
     fun httpsCallable(name: String, timeout: Long? = null): HttpsCallableReference
+    fun useEmulator(host: String, port: Int)
+
+    @Deprecated("Use useEmulator(java.lang.String,int) to connect to the emulator.")
     fun useFunctionsEmulator(origin: String)
 }
 
 expect class HttpsCallableReference {
-    @ImplicitReflectionSerializer
-    suspend operator fun invoke(data: Any, encodeDefaults: Boolean = true): HttpsCallableResult
+    suspend operator inline fun <reified T> invoke(data: T, encodeDefaults: Boolean = true): HttpsCallableResult
     suspend operator fun <T> invoke(strategy: SerializationStrategy<T>, data: T, encodeDefaults: Boolean = true): HttpsCallableResult
     suspend operator fun invoke(): HttpsCallableResult
 }
 
 expect class HttpsCallableResult {
-    @ImplicitReflectionSerializer
     inline fun <reified T> data(): T
     fun <T> data(strategy: DeserializationStrategy<T>): T
 }

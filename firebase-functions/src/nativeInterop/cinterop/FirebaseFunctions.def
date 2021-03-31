@@ -1,0 +1,5 @@
+language = Objective-C
+package = cocoapods.FirebaseFunctions
+modules = FirebaseFunctions
+compilerOpts = -framework FirebaseFunctions
+linkerOpts = -framework FirebaseFunctions -framework GTMSessionFetcher

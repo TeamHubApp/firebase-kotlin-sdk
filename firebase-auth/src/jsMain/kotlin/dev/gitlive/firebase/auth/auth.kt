@@ -92,11 +92,30 @@ actual class FirebaseAuth internal constructor(val js: firebase.auth.Auth) {
             else -> throw UnsupportedOperationException(result.operation)
         } as T
     }
+
+    actual fun useEmulator(host: String, port: Int) = rethrow { js.useEmulator("http://$host:$port") }
 }
 
 actual class AuthResult internal constructor(val js: firebase.auth.AuthResult) {
     actual val user: FirebaseUser?
         get() = rethrow { js.user?.let { FirebaseUser(it) } }
+}
+
+actual class AuthTokenResult(val js: firebase.auth.IdTokenResult) {
+//    actual val authTimestamp: Long
+//        get() = js.authTime
+    actual val claims: Map<String, Any>
+        get() = (js("Object").keys(js.claims) as Array<String>).mapNotNull {
+                key -> js.claims[key]?.let { key to it }
+        }.toMap()
+//    actual val expirationTimestamp: Long
+//        get() = android.expirationTime
+//    actual val issuedAtTimestamp: Long
+//        get() = js.issuedAtTime
+    actual val signInProvider: String?
+        get() = js.signInProvider
+    actual val token: String?
+        get() = js.token
 }
 
 internal fun ActionCodeSettings.toJson() = json(
@@ -119,7 +138,7 @@ actual open class FirebaseAuthWebException(code: String?, cause: Throwable): Fir
 
 internal inline fun <T, R> T.rethrow(function: T.() -> R): R = dev.gitlive.firebase.auth.rethrow { function() }
 
-internal inline fun <R> rethrow(function: () -> R): R {
+private inline fun <R> rethrow(function: () -> R): R {
     try {
         return function()
     } catch (e: Exception) {
@@ -144,6 +163,7 @@ private fun errorToException(cause: dynamic) = when(val code = cause.code?.toStr
     "auth/maximum-second-factor-count-exceeded",
     "auth/second-factor-already-in-use" -> FirebaseAuthMultiFactorException(code, cause)
     "auth/credential-already-in-use" -> FirebaseAuthUserCollisionException(code, cause)
+    "auth/email-already-in-use" -> FirebaseAuthUserCollisionException(code, cause)
     "auth/invalid-email" -> FirebaseAuthEmailException(code, cause)
 
 //                "auth/app-deleted" ->

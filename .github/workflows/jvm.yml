@@ -2,7 +2,7 @@ name: JVM
 
 on:
   push:
-    branches: [ jvm-target ]
+    branches: [ jvm-target, jvm-target-with-master-1-4-31 ]
 
 jobs:
   build:

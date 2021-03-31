@@ -7,6 +7,8 @@ package dev.gitlive.firebase.firestore
 import kotlinx.coroutines.*
 import platform.Foundation.*
 
+actual val emulatorHost: String = "localhost"
+
 actual val context: Any = Unit
 
 actual fun runTest(test: suspend () -> Unit) = runBlocking {

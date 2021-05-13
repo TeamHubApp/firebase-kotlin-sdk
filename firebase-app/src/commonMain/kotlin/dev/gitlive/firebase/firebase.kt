@@ -6,6 +6,9 @@
 @file:JvmName("CommonKt")
 package dev.gitlive.firebase
 
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.channels.ClosedSendChannelException
+import kotlinx.coroutines.channels.SendChannel
 import kotlin.jvm.JvmMultifileClass
 import kotlin.jvm.JvmName
 
@@ -43,15 +46,27 @@ expect fun Firebase.initialize(context: Any? = null, options: FirebaseOptions, n
 val Firebase.options: FirebaseOptions
     get() = Firebase.app.options
 
-data class FirebaseOptions(
-    val applicationId: String,
-    val apiKey: String,
-    val databaseUrl: String? = null,
-    val gaTrackingId: String? = null,
-    val storageBucket: String? = null,
-    val projectId: String? = null,
-    val gcmSenderId: String? = null
-)
+expect class FirebaseOptions(
+    applicationId: String,
+    apiKey: String,
+    databaseUrl: String? = null,
+    gaTrackingId: String? = null,
+    storageBucket: String? = null,
+    projectId: String? = null,
+    gcmSenderId: String? = null
+) {
+    val applicationId: String
+    val apiKey: String
+    val databaseUrl: String?
+    val gaTrackingId: String?
+    val storageBucket: String?
+    val projectId: String?
+    val gcmSenderId: String?
+
+    companion object {
+        fun withContext(context: Any): FirebaseOptions?
+    }
+}
 
 expect open class FirebaseException : Exception
 

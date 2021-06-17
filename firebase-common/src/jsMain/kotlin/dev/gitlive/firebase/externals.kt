@@ -70,17 +70,6 @@ external object firebase {
             fun onAuthStateChanged(nextOrObserver: (user.User?) -> Unit): () -> Unit
             fun onIdTokenChanged(nextOrObserver: (user.User?) -> Unit): () -> Unit
         }
-
-        abstract class IdTokenResult {
-            val authTime: String
-            val claims: Json
-            val expirationTime: String
-            val issuedAtTime: String
-            val signInProvider: String?
-            val signInSecondFactor: String?
-            val token: String
-        }
-
         abstract class AuthResult {
             val credential: AuthCredential?
             val operationType: String?
@@ -200,7 +189,6 @@ external object firebase {
 
             fun delete(): Promise<Unit>
             fun getIdToken(forceRefresh: Boolean?): Promise<String>
-            fun getIdTokenResult(forceRefresh: Boolean?): Promise<auth.IdTokenResult>
             fun linkWithCredential(credential: auth.AuthCredential): Promise<auth.AuthResult>
             fun reauthenticateWithCredential(credential: auth.AuthCredential): Promise<auth.AuthResult>
             fun reload(): Promise<Unit>
@@ -359,14 +347,6 @@ external object firebase {
             fun enablePersistence(): Promise<Unit>
             fun clearPersistence(): Promise<Unit>
             fun useEmulator(host: String, port: Int)
-            fun disableNetwork(): Promise<Unit>
-            fun enableNetwork(): Promise<Unit>
-        }
-
-        open class Timestamp {
-            val seconds: Double
-            val nanoseconds: Double
-            fun toMillis(): Double
         }
 
         open class Query {
@@ -446,6 +426,14 @@ external object firebase {
             fun delete(documentReference: DocumentReference): Transaction
         }
 
+        open class Timestamp(seconds: Long, nanoseconds: Int) {
+            companion object {
+                fun now(): Timestamp
+            }
+
+            val seconds: Long
+            val nanoseconds: Int
+        }
         open class FieldPath(vararg fieldNames: String) {
             companion object {
                 val documentId: FieldPath
@@ -454,10 +442,10 @@ external object firebase {
 
         abstract class FieldValue {
             companion object {
-                fun serverTimestamp(): FieldValue
                 fun delete(): FieldValue
                 fun arrayRemove(vararg elements: Any): FieldValue
                 fun arrayUnion(vararg elements: Any): FieldValue
+                fun serverTimestamp(): FieldValue
             }
         }
     }

@@ -30,12 +30,20 @@ jobs:
       run: ./gradlew assemble
     - name: Run JS Tests
       run: ./gradlew cleanTest jsTest
-    - name: Upload test artifact
+    - name: Upload JS test artifact
       uses: actions/upload-artifact@v2
       if: failure()
       with:
-        name: "JSTest Report HTML"
+        name: "JS Test Report HTML"
         path: "firebase-firestore/build/reports/tests/jsTest/"
+    - name: Run iOS Tests
+      run: ./gradlew cleanTest iosX64Test
+    - name: Upload iOS test artifact
+      uses: actions/upload-artifact@v2
+      if: failure()
+      with:
+        name: "iOS Test Report HTML"
+        path: "firebase-firestore/build/reports/tests/iosTest/"
     - name: Run Android Instrumented Tests
       uses: reactivecircus/android-emulator-runner@v2
       with:
@@ -44,3 +52,9 @@ jobs:
         arch: x86_64
         profile: Nexus 6
         script: ./gradlew connectedAndroidTest
+    - name: Upload Android test artifact
+      uses: actions/upload-artifact@v2
+      if: failure()
+      with:
+        name: "Android Test Report HTML"
+        path: "firebase-firestore/build/reports/tests/androidTests/"

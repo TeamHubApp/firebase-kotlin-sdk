@@ -55,6 +55,22 @@ kotlin {
             rootProject.project("firebase-app").projectDir.resolve("src/nativeInterop/cinterop/Carthage/Build/iOS")
         ).plus(
             listOf(
+                "FirebaseAnalytics",
+                "FirebaseCore",
+                "FirebaseCoreDiagnostics",
+                "FirebaseInstallations",
+                "GoogleAppMeasurement",
+                "GoogleDataTransport",
+                "GoogleUtilities",
+                "nanopb",
+                "PromisesObjC"
+            ).map {
+                val archVariant = if (konanTarget is KonanTarget.IOS_X64) "ios-arm64_i386_x86_64-simulator" else "ios-arm64_armv7"
+
+                rootProject.project("firebase-app").projectDir.resolve("src/nativeInterop/cinterop/Carthage/Build/$it.xcframework/$archVariant")
+            }
+        ).plus(
+            listOf(
                 "FirebaseDatabase",
                 "leveldb-library"
             ).map {

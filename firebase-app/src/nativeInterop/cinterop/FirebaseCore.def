@@ -2,4 +2,4 @@ language = Objective-C
 package = cocoapods.FirebaseCore
 modules = FirebaseCore
 compilerOpts = -framework FirebaseCore
-linkerOpts = -framework FirebaseCore -framework FirebaseCoreDiagnostics -framework FirebaseAnalytics -framework FIRAnalyticsConnector -framework GoogleAppMeasurement -framework FirebaseInstallations -framework GoogleDataTransport  -framework GoogleUtilities -framework PromisesObjC -framework nanopb -framework StoreKit -lsqlite3
+linkerOpts = -framework FirebaseCore -framework FirebaseCoreDiagnostics -framework FirebaseAnalytics -framework GoogleAppMeasurement -framework FirebaseInstallations -framework GoogleDataTransport  -framework GoogleUtilities -framework PromisesObjC -framework nanopb -framework StoreKit -lsqlite3

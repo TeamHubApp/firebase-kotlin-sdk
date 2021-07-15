@@ -22,6 +22,7 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.produceIn
 import kotlinx.coroutines.selects.select
 import kotlinx.serialization.DeserializationStrategy
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerializationStrategy
 import platform.Foundation.*
 import kotlin.collections.component1
@@ -155,6 +156,24 @@ actual class DatabaseReference internal constructor(
 
     actual suspend fun removeValue() {
         ios.await(persistenceEnabled) { removeValueWithCompletionBlock(it) }
+    }
+
+    actual suspend fun <T> runTransaction(strategy: KSerializer<T>, transactionUpdate: (currentData: T) -> T): DataSnapshot {
+        val deferred = CompletableDeferred<Result<DataSnapshot>>()
+        ios.runTransactionBlock(
+            block = { firMutableData ->
+                FIRTransactionResult.successWithValue(transactionUpdate(decode(strategy, firMutableData)) as FIRMutableData)
+            },
+            andCompletionBlock = { error, _, snapshot ->
+                if (error == null) {
+                    deferred.complete(Result.success(DataSnapshot(snapshot!!)))
+                } else {
+                    deferred.complete(Result.failure(Throwable(error.localizedDescription)))
+                }
+            },
+            withLocalEvents = false
+        )
+        return deferred.await().getOrThrow()
     }
 }
 
